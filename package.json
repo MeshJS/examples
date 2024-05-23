@@ -5,7 +5,5 @@
     "@meshsdk/core": "^1.5.17",
     "tsx": "^4.9.4"
   },
-  "scripts": {
-    "basic-transaction": "tsx basic-transaction/index.ts"
-  }
+  "scripts": {}
 }

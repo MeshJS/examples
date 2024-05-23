@@ -11,5 +11,5 @@ npm install
 ## Run
 
 ```bash
-npm run folder-name # e.g. npm run basic-transaction
+npx tsx folder-name/file-name.ts # e.g. npx tsx basic-transaction/index.ts
 ```
