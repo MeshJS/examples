@@ -3,6 +3,9 @@ import { getWallet } from "./common/get-wallet";
 
 // Initialize the wallet with a mnemonic key
 const wallet = getWallet();
+console.log(wallet.getChangeAddress())
+const utxo = await wallet.getUtxos();
+console.log(utxo);
 
 // Create and send a transaction
 const tx = new Transaction({ initiator: wallet });

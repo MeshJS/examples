@@ -1,8 +1,8 @@
 {
-  "name": "mesh-examples",
+  "name": "run-standalone-files",
   "type": "module",
   "dependencies": {
-    "@meshsdk/core": "^1.5.23",
+    "@meshsdk/core": "^1.6.2",
     "dotenv": "^16.4.5",
     "tsx": "^4.9.4"
   },
