@@ -9,9 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@meshsdk/core": "^1.6.1",
-    "@meshsdk/react": "^1.6.1",
-    "lucid-cardano": "^0.10.7",
+    "@meshsdk/core": "^1.6.4",
+    "@meshsdk/react": "^1.6.4",
     "next": "15.0.0-rc.0",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522"

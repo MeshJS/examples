@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["lucid-cardano", "@meshsdk/core", "@meshsdk/react"],
+  serverExternalPackages: ["@meshsdk/core", "@meshsdk/react"],
   experimental: {
     after: true,
   },
