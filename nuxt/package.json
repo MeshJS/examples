@@ -1,0 +1,21 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "nuxt dev",
+    "clean": "rm -rf .nuxt dist .vite package-lock.json node_modules && npx nuxi cleanup"
+  },
+  "dependencies": {
+    "@meshsdk/common": "^1.6.5",
+    "@meshsdk/core": "^1.6.5",
+    "@meshsdk/core-cst": "^1.6.5",
+    "nuxt": "^3.12.4",
+    "vue": "latest"
+  },
+  "devDependencies": {
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-top-level-await": "^1.4.4",
+    "vite-plugin-wasm": "^3.3.0"
+  }
+}
