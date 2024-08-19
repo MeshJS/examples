@@ -1,16 +1,17 @@
 {
-  "name": "next-page-route",
+  "name": "mesh-next-page-route",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next package-lock.json node_modules"
   },
   "dependencies": {
-    "@meshsdk/core": "^1.6.2",
-    "@meshsdk/react": "^1.6.2",
+    "@meshsdk/core": "^1.6.9",
+    "@meshsdk/react": "^1.6.9",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18"

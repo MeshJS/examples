@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-app",
+  "name": "mesh-nuxt-vite",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,9 +7,7 @@
     "clean": "rm -rf .nuxt dist .vite package-lock.json node_modules && npx nuxi cleanup"
   },
   "dependencies": {
-    "@meshsdk/common": "^1.6.5",
-    "@meshsdk/core": "^1.6.5",
-    "@meshsdk/core-cst": "^1.6.5",
+    "@meshsdk/core": "^1.6.9",
     "nuxt": "^3.12.4",
     "vue": "latest"
   },

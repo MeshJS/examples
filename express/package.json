@@ -3,13 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "ts-node src/index.ts"
+    "dev": "ts-node src/index.ts",
+    "clean": "rm -rf dist package-lock.json node_modules"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@meshsdk/core": "^1.6.4",
+    "@meshsdk/core": "^1.6.9",
     "express": "^4.19.2"
   },
   "devDependencies": {
