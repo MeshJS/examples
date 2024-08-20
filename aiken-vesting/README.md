@@ -8,9 +8,9 @@ When a new employee joins an organization, they typically receive a promise of c
 
 First, we define the datum's shape, as this datum serves as configuration and contains the different parameters of our vesting operation.
 
-```
+```rs
 pub type VestingDatum {
-  /// POSIX time in second, e.g. 1672843961000
+  /// POSIX time in milliseconds, e.g. 1672843961000
   lock_until: Int,
   /// Owner's credentials
   owner: ByteArray,
@@ -21,15 +21,15 @@ pub type VestingDatum {
 
 In this example, we define a `VestingDatum` that contains the following fields:
 
-- `lock_until`: The POSIX timestamp in seconds until which the funds are locked.
-- `owner`: The credentials of the owner of the funds.
-- `beneficiary`: The credentials of the beneficiary of the funds.
+- `lock_until`: The POSIX timestamp in milliseconds until which the funds are locked.
+- `owner`: The credentials (public key hash) of the owner of the funds.
+- `beneficiary`: The credentials (public key hash) of the beneficiary of the funds.
 
 This datum can be found in `aiken-vesting/aiken-workspace/lib/vesting/types.ak`.
 
 Next, we define the spend validator.
 
-```
+```rs
 use aiken/transaction.{ScriptContext, Spend}
 use vesting/types.{VestingDatum}
 use vodka_extra_signatories.{key_signed}
@@ -94,7 +94,7 @@ We recommend you to check out `aiken-vesting/aiken-workspace/validators/tests/ve
 
 To compile the script, run the following command:
 
-```
+```sh
 aiken build
 ```
 
@@ -106,7 +106,7 @@ This command will generate a CIP-0057 Plutus blueprint, which you can find in `a
 
 First, the owner can deposit funds into the vesting contract. The owner can specify the lockup period and the beneficiary of the funds.
 
-```
+```ts
 const assets: Asset[] = [
   {
     unit: "lovelace",
@@ -125,7 +125,7 @@ In this example, we deposit 10 ADA into the vesting contract. The funds are lock
 
 Then, we prepare a few variables to be used in the transaction. We get the wallet address and the UTXOs of the wallet. We also get the script address of the vesting contract, to send the funds to the script address. We also get the owner and beneficiary public key hashes.
 
-```
+```ts
 const { utxos, walletAddress } = await getWalletInfoForTx();
 
 const { scriptAddr } = getScript();
@@ -136,11 +136,11 @@ const { pubKeyHash: beneficiaryPubKeyHash } = deserializeAddress(beneficiary);
 
 Next, we construct the transaction to deposit the funds into the vesting contract.
 
-```
+```ts
 const txBuilder = new MeshTxBuilder({
-    fetcher: blockchainProvider,
-    submitter: blockchainProvider,
-  });
+  fetcher: blockchainProvider,
+  submitter: blockchainProvider,
+});
 
 await txBuilder
   .txOut(scriptAddr, amount)
@@ -158,7 +158,7 @@ In this example, we construct the transaction to deposit the funds into the vest
 
 Finally, we sign and submit the transaction.
 
-```
+```ts
 const signedTx = await wallet.signTx(unsignedTx);
 const txHash = await wallet.submitTx(signedTx);
 ```
@@ -167,7 +167,7 @@ To execute this code, ensure you have defined blockfrost key in the `.env` file.
 
 You can run the following command execute the deposit funds code:
 
-```
+```sh
 npm run deposit
 ```
 
@@ -181,9 +181,10 @@ After the lockup period expires, the beneficiary can withdraw the funds from the
 
 First, let's look for the UTxOs containing the funds locked in the vesting contract.
 
-```
-const txHashFromDesposit = "ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b";
-const utxos = await blockchainProvider.fetchUTxOs(txHash)
+```ts
+const txHashFromDesposit =
+  "ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b";
+const utxos = await blockchainProvider.fetchUTxOs(txHash);
 const vestingUtxo = utxos[0];
 ```
 
@@ -191,7 +192,7 @@ In this example, we fetch the UTxOs containing the funds locked in the vesting c
 
 Like before, we prepare a few variables to be used in the transaction. We get the wallet address and the UTXOs of the wallet. We also get the script address of the vesting contract, to send the funds to the script address. We also get the owner and beneficiary public key hashes.
 
-```
+```ts
 const { utxos, walletAddress, collateral } = await getWalletInfoForTx();
 const { input: collateralInput, output: collateralOutput } = collateral;
 
@@ -201,21 +202,21 @@ const { pubKeyHash } = deserializeAddress(walletAddress);
 
 Next, we prepare the datum and the slot number to set the transaction valid interval to be valid only after the slot.
 
-```
+```ts
 const datum = deserializeDatum<VestingDatum>(vestingUtxo.output.plutusData!);
 
 const invalidBefore =
-unixTimeToEnclosingSlot(
-  Math.min(datum.fields[0].int as number, Date.now() - 15000),
-  SLOT_CONFIG_NETWORK.preprod
-) + 1;
+  unixTimeToEnclosingSlot(
+    Math.min(datum.fields[0].int as number, Date.now() - 15000),
+    SLOT_CONFIG_NETWORK.preprod
+  ) + 1;
 ```
 
 In this example, we prepare the datum and the slot number to set the transaction valid interval to be valid only after the slot. We get the lockup period from the datum and set the transaction valid interval to be valid only after the lockup period.
 
 Next, we construct the transaction to withdraw the funds from the vesting contract.
 
-```
+```ts
 const txBuilder = new MeshTxBuilder({
   fetcher: blockchainProvider,
   submitter: blockchainProvider,
@@ -250,10 +251,10 @@ const unsignedTx = txBuilder.txHex;
 
 In this example, we construct the transaction to withdraw the funds from the vesting contract. We specify the UTxO containing the funds locked in the vesting contract, the script address of the vesting contract, the wallet address to send the funds to, and the transaction valid interval.
 
-Finally, we sign and submit the transaction.
+Finally, we sign and submit the transaction. Notice that since we are unlocking fund from validator, partial sign has to be specified by passing a `true` parameter into `wallet.signTx`.
 
-```
-const signedTx = await wallet.signTx(unsignedTx);
+```ts
+const signedTx = await wallet.signTx(unsignedTx, true);
 const txHash = await wallet.submitTx(signedTx);
 ```
 
@@ -261,7 +262,7 @@ To execute this code, update `aiken-vesting/src/withdraw-fund.ts` with the trans
 
 Run the following command:
 
-```
+```sh
 npm run withdraw
 ```
 
