@@ -1,16 +1,17 @@
 {
-  "name": "aiken-dapp",
+  "name": "mesh-next-app-route",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "rm -rf .next package-lock.json node_modules"
   },
   "dependencies": {
-    "@meshsdk/core": "^1.6.5",
-    "@meshsdk/react": "^1.6.5",
+    "@meshsdk/core": "^1.6.9",
+    "@meshsdk/react": "^1.6.9",
     "next": "15.0.0-rc.0",
     "react": "19.0.0-rc-f994737d14-20240522",
     "react-dom": "19.0.0-rc-f994737d14-20240522"

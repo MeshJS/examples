@@ -1,5 +1,5 @@
 {
-  "name": "run-standalone-files",
+  "name": "aiken-vesting",
   "type": "module",
   "dependencies": {
     "@meshsdk/core": "^1.6.9",
@@ -7,7 +7,7 @@
     "tsx": "^4.9.4"
   },
   "scripts": {
-    "yaci:start": "./yaci/bin/devkit.sh start",
-    "yaci:stop": "./yaci/bin/devkit.sh stop"
+    "deposit": "npx tsx src/deposit-fund.ts",
+    "withdraw": "npx tsx src/withdraw-fund.ts"
   }
 }

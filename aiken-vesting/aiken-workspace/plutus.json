@@ -1,0 +1,71 @@
+{
+  "preamble": {
+    "title": "meshjs/vesting",
+    "description": "Aiken contracts for project 'meshjs/vesting'",
+    "version": "0.0.0",
+    "plutusVersion": "v2",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.0.29-alpha+unknown"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "vesting.vesting",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/vesting~1types~1VestingDatum"
+        }
+      },
+      "redeemer": {
+        "title": "_redeemer",
+        "schema": {
+          "$ref": "#/definitions/Data"
+        }
+      },
+      "compiledCode": "5901c40100003232323232323223222533300532533233007300130083754600460126ea800c4c8c8c94ccc028cc004dd6180118061baa3003300c375400c6eb8c014c030dd50048a511533300a330013758600460186ea8c00cc030dd50031bae300f30103010300c3754012266446464646464a666022601660246ea80084c94ccc0480104cdc40038008011bad301630133754004002264a666022601660246ea80084c94ccc0480100084cdc48038009bad3016301337540040022940c050008cdc424000601e6ea8c04cc050004cc044c048004cc044ccc034cdc424000601c6ea8c048c04c00530103d87a80004c0103d87980004bd7018071baa3005300e3754004601e602060206020602060206020602060186ea8c00cc030dd50031bad3003300c3754012294088c8cc00400400c894ccc040004528099299980719b8f375c602600400829444cc00c00c004c04c0048c038c03cc03cc03cc03cc03cc03cc03cc03c0048c034004dc3a400429408c02cc0300045261365653330023370e900018019baa0011323232323232533300b300e002149858dd7180600098060011bae300a001300a002375a601000260086ea8004595cd2ab9d5573caae7d5d02ba157441",
+      "hash": "ac96a3fa3cabf670268a88720402c715ed5fd73ffb3276e6092ead00"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Data": {
+      "title": "Data",
+      "description": "Any Plutus data."
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "vesting/types/VestingDatum": {
+      "title": "VestingDatum",
+      "anyOf": [
+        {
+          "title": "VestingDatum",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "lock_until",
+              "description": "POSIX time in second, e.g. 1672843961000",
+              "$ref": "#/definitions/Int"
+            },
+            {
+              "title": "owner",
+              "description": "Owner's credentials",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "beneficiary",
+              "description": "Beneficiary's credentials",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
