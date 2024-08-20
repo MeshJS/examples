@@ -171,6 +171,8 @@ You can run the following command execute the deposit funds code:
 npm run deposit
 ```
 
+Upon successful execution, you will receive a transaction hash. Save this transaction hash for withdrawing the funds.
+
 Example of a [successful deposit transaction](https://preprod.cardanoscan.io/transaction/ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b).
 
 ### Withdraw funds
@@ -255,7 +257,9 @@ const signedTx = await wallet.signTx(unsignedTx);
 const txHash = await wallet.submitTx(signedTx);
 ```
 
-To execute this code, run the following command:
+To execute this code, update `aiken-vesting/src/withdraw-fund.ts` with the transaction hash from the deposit transaction. Ensure you have defined blockfrost key in the `.env` file. You can also define your wallet mnemonic in `aiken-vesting/src/configs.ts` file.
+
+Run the following command:
 
 ```
 npm run withdraw
