@@ -76,7 +76,7 @@ It's important to note that since we don't control the upper bound, a transactio
 
 The beneficiary can withdraw the funds after the lockup period expires. The beneficiary can also be different from the owner of the funds.
 
-## Testing
+### Testing
 
 To test the vesting contract, we have provided the a comphrehensive test script,you can run tests with `aiken check`.
 
@@ -90,7 +90,7 @@ The test script includes the following test cases:
 
 We recommend you to check out `aiken-vesting/aiken-workspace/validators/tests/vesting.ak` to learn more.
 
-## Compile and build script
+### Compile and build script
 
 To compile the script, run the following command:
 

@@ -2,12 +2,12 @@
   "name": "aiken-vesting",
   "type": "module",
   "dependencies": {
-    "@meshsdk/core": "^1.7.0",
+    "@meshsdk/core": "^1.7.1",
     "dotenv": "^16.4.5",
     "tsx": "^4.9.4"
   },
   "scripts": {
-    "deposit": "npx tsx src/deposit-fund.ts",
-    "withdraw": "npx tsx src/withdraw-fund.ts"
+    "lock": "npx tsx src/lock-assets.ts",
+    "unlock": "npx tsx src/unlock-assets.ts"
   }
 }
