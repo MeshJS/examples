@@ -1,25 +1,35 @@
 import {
-  Asset,
   deserializeAddress,
   deserializeDatum,
   UTxO,
   unixTimeToEnclosingSlot,
   SLOT_CONFIG_NETWORK,
+  ConStr0,
+  Integer,
+  BuiltinByteString,
 } from "@meshsdk/core";
 import {
   getScript,
   getTxBuilder,
   getUtxoByTxHash,
   getWalletInfoForTx,
-  VestingDatum,
   wallet,
 } from "./common";
+import blueprint from "../aiken-workspace/plutus.json";
+import { prompt } from "../../common/prompt";
+
+export type VestingDatum = ConStr0<
+  [Integer, BuiltinByteString, BuiltinByteString]
+>;
 
 export async function withdrawFundTx(vestingUtxo: UTxO): Promise<string> {
   const { utxos, walletAddress, collateral } = await getWalletInfoForTx();
   const { input: collateralInput, output: collateralOutput } = collateral;
 
-  const { scriptAddr, scriptCbor } = getScript();
+  const { scriptAddr, scriptCbor } = getScript(
+    blueprint.validators[0].compiledCode
+  );
+
   const { pubKeyHash } = deserializeAddress(walletAddress);
 
   const datum = deserializeDatum<VestingDatum>(vestingUtxo.output.plutusData!);
@@ -32,7 +42,7 @@ export async function withdrawFundTx(vestingUtxo: UTxO): Promise<string> {
 
   const txBuilder = getTxBuilder();
   await txBuilder
-    .spendingPlutusScriptV2()
+    .spendingPlutusScript("V3")
     .txIn(
       vestingUtxo.input.txHash,
       vestingUtxo.input.outputIndex,
@@ -58,8 +68,7 @@ export async function withdrawFundTx(vestingUtxo: UTxO): Promise<string> {
 }
 
 async function main() {
-  const txHashFromDesposit =
-    "ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b";
+  const txHashFromDesposit = await prompt("Transaction hash from deposit: ");
 
   const utxo = await getUtxoByTxHash(txHashFromDesposit);
 

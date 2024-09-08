@@ -1,5 +1,5 @@
 {
-  "name": "aiken-vesting",
+  "name": "aiken-giftcard",
   "type": "module",
   "dependencies": {
     "@meshsdk/core": "^1.7.3",
@@ -7,7 +7,7 @@
     "tsx": "^4.9.4"
   },
   "scripts": {
-    "deposit": "npx tsx src/deposit-fund.ts",
-    "withdraw": "npx tsx src/withdraw-fund.ts"
+    "create": "npx tsx src/create.ts",
+    "redeem": "npx tsx src/redeem.ts"
   }
 }

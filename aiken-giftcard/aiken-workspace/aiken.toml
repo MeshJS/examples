@@ -1,13 +1,13 @@
-name = "meshjs/aiken"
+name = "meshjs/giftcard"
 version = "0.0.0"
 compiler = "v1.1.0"
 plutus = "v3"
 license = "Apache-2.0"
-description = "Aiken on MeshJS"
+description = "Aiken contracts for project 'meshjs/giftcard'"
 
 [repository]
-user = "jingles"
-project = "test1"
+user = "meshjs"
+project = "giftcard"
 platform = "github"
 
 [[dependencies]]

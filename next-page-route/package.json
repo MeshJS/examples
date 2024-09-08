@@ -10,8 +10,8 @@
     "clean": "rm -rf .next package-lock.json node_modules"
   },
   "dependencies": {
-    "@meshsdk/core": "^1.6.9",
-    "@meshsdk/react": "^1.6.9",
+    "@meshsdk/core": "^1.7.3",
+    "@meshsdk/react": "^1.7.3",
     "next": "14.2.5",
     "react": "^18",
     "react-dom": "^18"

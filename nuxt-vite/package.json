@@ -7,7 +7,7 @@
     "clean": "rm -rf .nuxt dist .vite package-lock.json node_modules && npx nuxi cleanup"
   },
   "dependencies": {
-    "@meshsdk/core": "^1.6.9",
+    "@meshsdk/core": "^1.7.3",
     "nuxt": "^3.12.4",
     "vue": "latest"
   },

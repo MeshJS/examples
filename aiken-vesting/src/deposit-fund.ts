@@ -1,6 +1,7 @@
 import { mConStr0 } from "@meshsdk/common";
 import { Asset, deserializeAddress } from "@meshsdk/core";
 import { getScript, getTxBuilder, getWalletInfoForTx, wallet } from "./common";
+import blueprint from "../aiken-workspace/plutus.json";
 
 export async function depositFundTx(
   amount: Asset[],
@@ -9,7 +10,7 @@ export async function depositFundTx(
 ): Promise<string> {
   const { utxos, walletAddress } = await getWalletInfoForTx();
 
-  const { scriptAddr } = getScript();
+  const { scriptAddr } = getScript(blueprint.validators[0].compiledCode);
 
   const { pubKeyHash: ownerPubKeyHash } = deserializeAddress(walletAddress);
   const { pubKeyHash: beneficiaryPubKeyHash } = deserializeAddress(beneficiary);

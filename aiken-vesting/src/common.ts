@@ -1,20 +1,18 @@
 import {
   BlockfrostProvider,
-  BuiltinByteString,
-  ConStr0,
-  Integer,
   MeshTxBuilder,
   MeshWallet,
   serializePlutusScript,
   UTxO,
 } from "@meshsdk/core";
-import { blockfrost_api_key, wallet_mnemonic } from "./configs";
 import { applyParamsToScript } from "@meshsdk/core-csl";
-import blueprint from "../aiken-workspace/plutus.json";
+import dotenv from "dotenv";
+dotenv.config();
 
-export type VestingDatum = ConStr0<
-  [Integer, BuiltinByteString, BuiltinByteString]
->;
+export const blockfrost_api_key = process.env.BLOCKFROST_API_KEY || "";
+export const wallet_mnemonic = process.env.MNEMONIC
+  ? process.env.MNEMONIC.split(",")
+  : "solution,".repeat(24).split(",").slice(0, 24);
 
 const blockchainProvider = new BlockfrostProvider(blockfrost_api_key);
 
@@ -45,14 +43,15 @@ export async function getWalletInfoForTx() {
   return { utxos, collateral, walletAddress };
 }
 
-export function getScript() {
-  const scriptCbor = applyParamsToScript(
-    blueprint.validators[0].compiledCode,
-    []
-  );
+export function getScript(
+  blueprintCompiledCode: string,
+  params: string[] = [],
+  version: "V1" | "V2" | "V3" = "V3"
+) {
+  const scriptCbor = applyParamsToScript(blueprintCompiledCode, params);
 
   const scriptAddr = serializePlutusScript(
-    { code: scriptCbor, version: "V2" },
+    { code: scriptCbor, version: version },
     undefined,
     0
   ).address;
@@ -61,18 +60,16 @@ export function getScript() {
 }
 
 export function getTxBuilder() {
-  const txBuilder = new MeshTxBuilder({
+  return new MeshTxBuilder({
     fetcher: blockchainProvider,
     submitter: blockchainProvider,
   });
-  return txBuilder;
 }
 
-export async function getUtxoByTxHash(
-  txHash: string
-): Promise<UTxO | undefined> {
+export async function getUtxoByTxHash(txHash: string): Promise<UTxO> {
   const utxos = await blockchainProvider.fetchUTxOs(txHash);
-  let scriptUtxo = utxos[0];
-
-  return scriptUtxo;
+  if (utxos.length === 0) {
+    throw new Error("UTxO not found");
+  }
+  return utxos[0];
 }

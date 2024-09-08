@@ -1,10 +1,4 @@
-import {
-  deserializeAddress,
-  mConStr0,
-  mConStr1,
-  UTxO,
-  stringToHex,
-} from "@meshsdk/core";
+import { deserializeAddress, mConStr0, UTxO, stringToHex } from "@meshsdk/core";
 import {
   getScript,
   getTxBuilder,
@@ -12,18 +6,20 @@ import {
   getWalletInfoForTx,
   wallet,
 } from "./common";
+import { prompt } from "../../common/prompt";
+import blueprint from "../aiken-workspace/plutus.json";
 
 export async function unlockAsset(
   scriptUtxo: UTxO,
   message: string
 ): Promise<string> {
   const { utxos, walletAddress, collateral } = await getWalletInfoForTx();
-  const { scriptCbor } = getScript();
+  const { scriptCbor } = getScript(blueprint.validators[0].compiledCode);
   const signerHash = deserializeAddress(walletAddress).pubKeyHash;
 
   const txBuilder = getTxBuilder();
   await txBuilder
-    .spendingPlutusScriptV2()
+    .spendingPlutusScript("V3")
     .txIn(
       scriptUtxo.input.txHash,
       scriptUtxo.input.outputIndex,
@@ -47,8 +43,8 @@ export async function unlockAsset(
 }
 
 async function main() {
-  const txHashFromDesposit =
-    "200b520bf41362de7a921be67be9d29c7b384325f9bfee6f5be252098972e2ab";
+  const txHashFromDesposit = await prompt("Transaction hash from lock: ");
+
   const message = "Hello, World!";
 
   const utxo = await getUtxoByTxHash(txHashFromDesposit);

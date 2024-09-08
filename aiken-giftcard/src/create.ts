@@ -2,23 +2,17 @@ import { Asset, deserializeAddress, mConStr0 } from "@meshsdk/core";
 import { getScript, getTxBuilder, getWalletInfoForTx, wallet } from "./common";
 import blueprint from "../aiken-workspace/plutus.json";
 
-export async function lockAsset(assets: Asset[]): Promise<string> {
+export async function create(
+  tokenName: string,
+  assets: Asset[]
+): Promise<string> {
   const { utxos, walletAddress } = await getWalletInfoForTx();
   const { scriptAddr } = getScript(blueprint.validators[0].compiledCode);
-
-  const signerHash = deserializeAddress(walletAddress).pubKeyHash;
-
-  const txBuilder = getTxBuilder();
-  await txBuilder
-    .txOut(scriptAddr, assets)
-    .txOutDatumHashValue(mConStr0([signerHash]))
-    .changeAddress(walletAddress)
-    .selectUtxosFrom(utxos)
-    .complete();
-  return txBuilder.txHex;
+  return "";
 }
 
 async function main() {
+  const tokenName = "MeshGiftCard";
   const assets: Asset[] = [
     {
       unit: "lovelace",
@@ -26,7 +20,7 @@ async function main() {
     },
   ];
 
-  const unsignedTx = await lockAsset(assets);
+  const unsignedTx = await create(tokenName, assets);
 
   const signedTx = await wallet.signTx(unsignedTx);
   const txHash = await wallet.submitTx(signedTx);
