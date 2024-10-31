@@ -1,4 +1,4 @@
-import { DynamicHookComponent } from "./_components/dinamycHook";
+import { DynamicHookComponent } from "./_components/dynamicHook";
 import { Wallet } from "./_components/wallet";
 
 export default function Home() {
