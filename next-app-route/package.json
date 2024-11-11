@@ -10,20 +10,20 @@
     "clean": "rm -rf .next package-lock.json node_modules"
   },
   "dependencies": {
-    "@meshsdk/common": "1.7.3",
-    "@meshsdk/core": "^1.7.3",
-    "next": "15.0.0-rc.0",
-    "react": "19.0.0-rc-f994737d14-20240522",
-    "react-dom": "19.0.0-rc-f994737d14-20240522"
+    "@meshsdk/core": "^1.7.13",
+    "@meshsdk/react": "^1.7.13",
+    "next": "^15.0.3",
+    "react": "^18",
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
-    "eslint": "^8",
-    "eslint-config-next": "15.0.0-rc.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.0.3",
     "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "tailwindcss": "^3.4.14",
     "typescript": "^5"
   }
 }
