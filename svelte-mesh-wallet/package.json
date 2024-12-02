@@ -1,5 +1,5 @@
 {
-	"name": "test-mesh",
+	"name": "svelte-mesh-wallet",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
@@ -36,6 +36,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@meshsdk/core": "^1.7.13"
+		"@meshsdk/core": "^1.7.23"
 	}
 }
