@@ -2,7 +2,7 @@
   "name": "aiken-hello-world",
   "type": "module",
   "dependencies": {
-    "@meshsdk/core": "^1.7.23",
+    "@meshsdk/core": "^1.7.33",
     "dotenv": "^16.4.5",
     "tsx": "^4.9.4"
   },
