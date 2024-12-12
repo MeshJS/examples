@@ -36,6 +36,6 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@meshsdk/core": "^1.7.33"
+		"@meshsdk/core": "^1.8.0"
 	}
 }
