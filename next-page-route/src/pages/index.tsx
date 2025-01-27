@@ -19,7 +19,7 @@ export default function Home() {
         </h1>
 
         <div className="mb-20">
-          <CardanoWallet />
+          <CardanoWallet isDark/>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 content-center justify-around ">
@@ -46,13 +46,13 @@ export default function Home() {
           </a>
 
           <a
-            href="https://meshjs.dev/react"
+            href="https://meshjs.dev/smart-contracts"
             className="bg-gray-800 rounded-xl border border-white hover:scale-105 transition max-w-96 p-5 m-5 md:mx-auto lg:mx-5 md:col-span-2 lg:col-span-1 "
           >
-            <h2 className="text-2xl font-bold mb-2">React components</h2>
+            <h2 className="text-2xl font-bold mb-2">Smart Contracts</h2>
             <p className="text-gray-400">
-              Useful React UI components and hooks, seamlessly integrate them
-              into your app, and bring the user interface to life.
+              Open-source smart contracts, complete with documentation, live
+              demos, and end-to-end source code.
             </p>
           </a>
         </div>
