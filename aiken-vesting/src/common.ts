@@ -5,7 +5,7 @@ import {
   serializePlutusScript,
   UTxO,
 } from "@meshsdk/core";
-import { applyParamsToScript } from "@meshsdk/core-csl";
+import { applyParamsToScript } from "@meshsdk/core-cst";
 import dotenv from "dotenv";
 dotenv.config();
 
