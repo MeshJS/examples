@@ -1,14 +1,16 @@
-# Aiken Vesting Example
+# Aiken Vesting: Time-Locked Cardano Smart Contract with Mesh
 
-Vesting contract is a smart contract that locks up funds for a period of time and allows the owner to withdraw the funds after the lockup period. Usually, vesting contract defines a beneficiary who can be different from the original owner.
+A vesting smart contract for Cardano that locks funds until a deadline. The on-chain validator is written in [Aiken](https://aiken-lang.org/) (Plutus V3), and the off-chain code uses the [Mesh SDK](https://meshjs.dev/) to deposit and withdraw on the preprod testnet.
 
-When a new employee joins an organization, they typically receive a promise of compensation to be disbursed after a specified duration of employment. This arrangement often involves the organization depositing the funds into a vesting contract, with the employee gaining access to the funds upon the completion of a predetermined lockup period. Through the utilization of vesting contracts, organizations establish a mechanism to encourage employee retention by linking financial rewards to tenure.
+A vesting contract holds funds for a **beneficiary** who can claim them only after a lockup period, while the **owner** who deposited them can withdraw at any time. A common use is employee compensation: an organization deposits tokens that an employee can claim once they have stayed long enough, which rewards retention.
 
-## On-Chain code
+## On-chain code
 
-First, we define the datum's shape, as this datum serves as configuration and contains the different parameters of our vesting operation.
+### Datum
 
-```rs
+The datum is set at deposit time and acts as the configuration for each vesting position. It is defined in [`aiken-workspace/validators/vesting.ak`](./aiken-workspace/validators/vesting.ak):
+
+```aiken
 pub type VestingDatum {
   /// POSIX time in milliseconds, e.g. 1672843961000
   lock_until: Int,
@@ -19,188 +21,112 @@ pub type VestingDatum {
 }
 ```
 
-In this example, we define a `VestingDatum` that contains the following fields:
+- `lock_until`: the POSIX timestamp in milliseconds when the lock ends.
+- `owner`: the public key hash of the wallet that deposited the funds.
+- `beneficiary`: the public key hash of the wallet that can claim after the deadline.
 
-- `lock_until`: The POSIX timestamp in milliseconds until which the funds are locked.
-- `owner`: The credentials (public key hash) of the owner of the funds.
-- `beneficiary`: The credentials (public key hash) of the beneficiary of the funds.
+### Validator
 
-This datum can be found in `aiken-vesting/aiken-workspace/lib/vesting/types.ak`.
-
-Next, we define the spend validator.
-
-```rs
-use aiken/transaction.{ScriptContext, Spend}
-use vesting/types.{VestingDatum}
+```aiken
+use cardano/transaction.{OutputReference, Transaction}
 use vodka_extra_signatories.{key_signed}
 use vodka_validity_range.{valid_after}
 
-validator {
-  pub fn vesting(datum: VestingDatum, _redeemer: Data, ctx: ScriptContext) {
-    // In principle, scripts can be used for different purpose (e.g. minting
-    // assets). Here we make sure it's only used when 'spending' from a eUTxO
-    when ctx.purpose is {
-      Spend(_) -> or {
-          key_signed(ctx.transaction.extra_signatories, datum.owner),
-          and {
-            key_signed(ctx.transaction.extra_signatories, datum.beneficiary),
-            valid_after(ctx.transaction.validity_range, datum.lock_until),
-          },
-        }
-      _ -> False
+validator vesting {
+  spend(
+    datum_opt: Option<VestingDatum>,
+    _redeemer: Data,
+    _input: OutputReference,
+    tx: Transaction,
+  ) {
+    expect Some(datum) = datum_opt
+    or {
+      key_signed(tx.extra_signatories, datum.owner),
+      and {
+        key_signed(tx.extra_signatories, datum.beneficiary),
+        valid_after(tx.validity_range, datum.lock_until),
+      },
     }
+  }
+
+  else(_) {
+    fail
   }
 }
 ```
 
-In this example, we define a `vesting` validator that ensures the following conditions are met:
+The funds can be spent when either:
 
-- The transaction must be signed by owner
+- the transaction is signed by the **owner**, or
+- the transaction is signed by the **beneficiary** and is valid only after `lock_until`.
 
-Or:
+### How time works on-chain
 
-- The transaction must be signed by beneficiary
-- The transaction must be valid after the lockup period
+Plutus scripts cannot read the current time. Instead, every transaction can declare a **validity interval**, and the ledger rejects the transaction before running any script if the current time is outside it. If a transaction's lower bound is after `lock_until`, the script knows the deadline has passed. That is what `valid_after` checks.
 
-This validator can be found in `aiken-vesting/aiken-workspace/validators/vesting.ak`.
+The upper bound is left open, so the beneficiary can claim at any point after the deadline, even years later.
 
-### How it works
+### Test and build
 
-The owner of the funds deposits the funds into the vesting contract. The funds are locked up until the lockup period expires.
+The validator includes five tests covering owner unlocks, beneficiary unlocks after the deadline, and the failure cases. With the [Aiken CLI](https://aiken-lang.org/installation-instructions) installed:
 
-Transactions can include validity intervals that specify when the transaction is valid, both from and until a certain time. The ledger verifies these validity bounds before executing a script and will only proceed if they are legitimate.
-
-This approach allows scripts to incorporate a sense of time while maintaining determinism within the script's context. For instance, if a transaction has a lower bound `A`, we can infer that the current time is at least `A`.
-
-It's important to note that since we don't control the upper bound, a transaction might be executed even 30 years after the vesting delay. However, from the script's perspective, this is entirely acceptable.
-
-The beneficiary can withdraw the funds after the lockup period expires. The beneficiary can also be different from the owner of the funds.
-
-### Testing
-
-To test the vesting contract, we have provided the a comphrehensive test script,you can run tests with `aiken check`.
-
-The test script includes the following test cases:
-
-- success unlocking
-- success unlocking with only owner signature
-- success unlocking with beneficiary signature and time passed
-- fail unlocking with only beneficiary signature
-- fail unlocking with only time passed
-
-We recommend you to check out `aiken-vesting/aiken-workspace/validators/tests/vesting.ak` to learn more.
-
-### Compile and build script
-
-To compile the script, run the following command:
-
-```sh
-aiken build
+```bash
+cd aiken-workspace
+aiken check   # run tests
+aiken build   # compile to plutus.json (CIP-57 blueprint)
 ```
 
-This command will generate a CIP-0057 Plutus blueprint, which you can find in `aiken-vesting/aiken-workspace/plutus.json`.
+A compiled `plutus.json` is already committed, so you only need Aiken if you change the contract. See the [validator specification](./aiken-workspace/README.md) for the full test list.
 
-## Off-Chain code
+## Off-chain code
 
 ### Deposit funds
 
-First, the owner can deposit funds into the vesting contract. The owner can specify the lockup period and the beneficiary of the funds.
+[`src/deposit-fund.ts`](./src/deposit-fund.ts) locks 10 ADA for one minute, naming a beneficiary:
 
 ```ts
-const assets: Asset[] = [
-  {
-    unit: "lovelace",
-    quantity: "10000000",
-  },
-];
+const assets: Asset[] = [{ unit: "lovelace", quantity: "10000000" }];
 
 const lockUntilTimeStamp = new Date();
 lockUntilTimeStamp.setMinutes(lockUntilTimeStamp.getMinutes() + 1);
 
 const beneficiary =
   "addr_test1qpvx0sacufuypa2k4sngk7q40zc5c4npl337uusdh64kv0uafhxhu32dys6pvn6wlw8dav6cmp4pmtv7cc3yel9uu0nq93swx9";
+
+const unsignedTx = await depositFundTx(assets, lockUntilTimeStamp.getTime(), beneficiary);
 ```
 
-In this example, we deposit 10 ADA into the vesting contract. The funds are locked up for 1 minute, and the beneficiary is specified.
-
-Then, we prepare a few variables to be used in the transaction. We get the wallet address and the UTXOs of the wallet. We also get the script address of the vesting contract, to send the funds to the script address. We also get the owner and beneficiary public key hashes.
+`depositFundTx` resolves the script address and both public key hashes, then sends the funds to the script with an inline datum:
 
 ```ts
-const { utxos, walletAddress } = await getWalletInfoForTx();
+export async function depositFundTx(amount: Asset[], lockUntilTimeStampMs: number, beneficiary: string) {
+  const { utxos, walletAddress } = await getWalletInfoForTx();
+  const { scriptAddr } = getScript(blueprint.validators[0].compiledCode);
 
-const { scriptAddr } = getScript();
+  const { pubKeyHash: ownerPubKeyHash } = deserializeAddress(walletAddress);
+  const { pubKeyHash: beneficiaryPubKeyHash } = deserializeAddress(beneficiary);
 
-const { pubKeyHash: ownerPubKeyHash } = deserializeAddress(walletAddress);
-const { pubKeyHash: beneficiaryPubKeyHash } = deserializeAddress(beneficiary);
+  const txBuilder = getTxBuilder();
+  await txBuilder
+    .txOut(scriptAddr, amount)
+    .txOutInlineDatumValue(
+      mConStr0([lockUntilTimeStampMs, ownerPubKeyHash, beneficiaryPubKeyHash])
+    )
+    .changeAddress(walletAddress)
+    .selectUtxosFrom(utxos)
+    .complete();
+  return txBuilder.txHex;
+}
 ```
 
-Next, we construct the transaction to deposit the funds into the vesting contract.
-
-```ts
-const txBuilder = new MeshTxBuilder({
-  fetcher: blockchainProvider,
-  submitter: blockchainProvider,
-});
-
-await txBuilder
-  .txOut(scriptAddr, amount)
-  .txOutInlineDatumValue(
-    mConStr0([lockUntilTimeStampMs, ownerPubKeyHash, beneficiaryPubKeyHash])
-  )
-  .changeAddress(walletAddress)
-  .selectUtxosFrom(utxos)
-  .complete();
-
-const unsignedTx = txBuilder.txHex;
-```
-
-In this example, we construct the transaction to deposit the funds into the vesting contract. We specify the script address of the vesting contract, the amount to deposit, and the lockup period, owner, and beneficiary of the funds.
-
-Finally, we sign and submit the transaction.
-
-```ts
-const signedTx = await wallet.signTx(unsignedTx);
-const txHash = await wallet.submitTx(signedTx);
-```
-
-To execute this code, ensure you have defined blockfrost key in the `.env` file. You can also define your wallet mnemonic in `aiken-vesting/src/configs.ts` file.
-
-You can run the following command execute the deposit funds code:
-
-```sh
-npm run deposit
-```
-
-Upon successful execution, you will receive a transaction hash. Save this transaction hash for withdrawing the funds.
-
-Example of a [successful deposit transaction](https://preprod.cardanoscan.io/transaction/ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b).
+The script then signs with `wallet.signTx(unsignedTx)`, submits with `wallet.submitTx(signedTx)`, and prints the transaction hash.
 
 ### Withdraw funds
 
-After the lockup period expires, the beneficiary can withdraw the funds from the vesting contract. The owner can also withdraw the funds from the vesting contract.
+[`src/withdraw-fund.ts`](./src/withdraw-fund.ts) asks for the deposit transaction hash and spends the vesting UTxO. It reads `lock_until` from the datum and sets the transaction's lower validity bound (`invalidBefore`) to the slot after whichever is earlier: the deadline, or 15 seconds ago.
 
-First, let's look for the UTxOs containing the funds locked in the vesting contract.
-
-```ts
-const txHashFromDesposit =
-  "ede9f8176fe41f0c84cfc9802b693dedb5500c0cbe4377b7bb0d57cf0435200b";
-const utxos = await blockchainProvider.fetchUTxOs(txHash);
-const vestingUtxo = utxos[0];
-```
-
-In this example, we fetch the UTxOs containing the funds locked in the vesting contract. We specify the transaction hash of the deposit transaction.
-
-Like before, we prepare a few variables to be used in the transaction. We get the wallet address and the UTXOs of the wallet. We also get the script address of the vesting contract, to send the funds to the script address. We also get the owner and beneficiary public key hashes.
-
-```ts
-const { utxos, walletAddress, collateral } = await getWalletInfoForTx();
-const { input: collateralInput, output: collateralOutput } = collateral;
-
-const { scriptAddr, scriptCbor } = getScript();
-const { pubKeyHash } = deserializeAddress(walletAddress);
-```
-
-Next, we prepare the datum and the slot number to set the transaction valid interval to be valid only after the slot.
+- If the deadline has passed, the lower bound lands after `lock_until`, so a beneficiary withdrawal passes the time check.
+- If the deadline has not passed, the lower bound is 15 seconds in the past, so the transaction is still valid now but only the owner's signature can unlock it.
 
 ```ts
 const datum = deserializeDatum<VestingDatum>(vestingUtxo.output.plutusData!);
@@ -210,60 +136,60 @@ const invalidBefore =
     Math.min(datum.fields[0].int as number, Date.now() - 15000),
     SLOT_CONFIG_NETWORK.preprod
   ) + 1;
-```
-
-In this example, we prepare the datum and the slot number to set the transaction valid interval to be valid only after the slot. We get the lockup period from the datum and set the transaction valid interval to be valid only after the lockup period.
-
-Next, we construct the transaction to withdraw the funds from the vesting contract.
-
-```ts
-const txBuilder = new MeshTxBuilder({
-  fetcher: blockchainProvider,
-  submitter: blockchainProvider,
-});
 
 await txBuilder
-  .spendingPlutusScriptV2()
-  .txIn(
-    vestingUtxo.input.txHash,
-    vestingUtxo.input.outputIndex,
-    vestingUtxo.output.amount,
-    scriptAddr
-  )
+  .spendingPlutusScript("V3")
+  .txIn(vestingUtxo.input.txHash, vestingUtxo.input.outputIndex, vestingUtxo.output.amount, scriptAddr)
   .spendingReferenceTxInInlineDatumPresent()
   .spendingReferenceTxInRedeemerValue("")
   .txInScript(scriptCbor)
   .txOut(walletAddress, [])
-  .txInCollateral(
-    collateralInput.txHash,
-    collateralInput.outputIndex,
-    collateralOutput.amount,
-    collateralOutput.address
-  )
+  .txInCollateral(collateralInput.txHash, collateralInput.outputIndex, collateralOutput.amount, collateralOutput.address)
   .invalidBefore(invalidBefore)
   .requiredSignerHash(pubKeyHash)
   .changeAddress(walletAddress)
   .selectUtxosFrom(utxos)
   .complete();
-
-const unsignedTx = txBuilder.txHex;
 ```
 
-In this example, we construct the transaction to withdraw the funds from the vesting contract. We specify the UTxO containing the funds locked in the vesting contract, the script address of the vesting contract, the wallet address to send the funds to, and the transaction valid interval.
+`spendingReferenceTxInInlineDatumPresent()` tells the builder the datum is already inline on the UTxO, and `requiredSignerHash` adds the signer to `extra_signatories` so the validator can check it. Spending from a Plutus script also needs a collateral input.
 
-Finally, we sign and submit the transaction. Notice that since we are unlocking fund from validator, partial sign has to be specified by passing a `true` parameter into `wallet.signTx`.
+## Run it
 
-```ts
-const signedTx = await wallet.signTx(unsignedTx, true);
-const txHash = await wallet.submitTx(signedTx);
-```
+This example imports a shared helper from the repository's root `common/` folder, so clone the whole repo.
 
-To execute this code, update `aiken-vesting/src/withdraw-fund.ts` with the transaction hash from the deposit transaction. Ensure you have defined blockfrost key in the `.env` file. You can also define your wallet mnemonic in `aiken-vesting/src/configs.ts` file.
+1. Install dependencies:
 
-Run the following command:
+   ```bash
+   cd aiken-vesting
+   npm install
+   ```
 
-```sh
-npm run withdraw
-```
+2. Copy `.env.example` to `.env` and fill in:
 
-Example of a [successful withdraw transaction](https://preprod.cardanoscan.io/transaction/b108f91a1dcd1b4c0bc978fb7557fc23ad052f1681cca078aa2515f8ab01e05e).
+   ```bash
+   BLOCKFROST_API_KEY=preprodxxxxxxxx
+   MNEMONIC="word1,word2,...,word24"
+   ```
+
+   Use a [Blockfrost](https://blockfrost.io/) **preprod** project ID and a comma-separated testnet mnemonic.
+
+3. Fund the wallet with test ADA from the [faucet](https://docs.cardano.org/cardano-testnets/tools/faucet). Withdrawing requires a pure-ADA UTxO of at least 5 ADA to use as collateral.
+
+4. Optionally, change the `beneficiary` address in `src/deposit-fund.ts`.
+
+5. Deposit, then withdraw:
+
+   ```bash
+   npm run deposit    # prints the deposit transaction hash
+   npm run withdraw   # paste the hash when prompted
+   ```
+
+The withdraw script signs with the wallet from `.env`. Run it with the depositing wallet to withdraw as the owner at any time, or with the beneficiary's wallet once the one-minute lock has passed. The slot calculation uses preprod settings, so this script runs on preprod only.
+
+## Learn more
+
+- [Aiken with Mesh guide](https://meshjs.dev/aiken)
+- [Vesting contract demo](https://meshjs.dev/smart-contracts/vesting)
+- [Smart contract transactions with MeshTxBuilder](https://meshjs.dev/apis/txbuilder/smart-contracts)
+- [Aiken documentation](https://aiken-lang.org/)

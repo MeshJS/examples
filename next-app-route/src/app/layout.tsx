@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Mesh App on Cardano",
-  description: "A Cardano dApp powered my Mesh",
+  description: "A Cardano dApp powered by Mesh",
 };
 
 export default function RootLayout({

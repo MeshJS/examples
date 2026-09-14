@@ -7,7 +7,7 @@ export default function Home() {
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
       <button
         type="button"
-        onClick={() => {
+        onClick={async () => {
           const blockchainProvider = new BlockfrostProvider("API_KEY");
           const wallet = new MeshWallet({
             networkId: 0, // 0: testnet, 1: mainnet
@@ -19,7 +19,7 @@ export default function Home() {
             },
           });
 
-          const address = wallet.getChangeAddress();
+          const address = await wallet.getChangeAddress();
           alert(address);
           console.log(address);
         }}
