@@ -5,7 +5,7 @@ const port = 3000;
 
 import { MeshWallet } from "@meshsdk/core";
 
-app.get("/", (req, res) => {
+app.get("/", async (req, res) => {
   const wallet = new MeshWallet({
     networkId: 0,
     key: {
@@ -39,7 +39,7 @@ app.get("/", (req, res) => {
     },
   });
 
-  const address = wallet.getChangeAddress();
+  const address = await wallet.getChangeAddress();
 
   res.send(address);
 });
